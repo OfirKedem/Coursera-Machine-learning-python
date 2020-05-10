@@ -2,57 +2,69 @@ import numpy as np
 from pandas import DataFrame
 
 
-def getData(data: DataFrame):
+# NOTE:
+#   m =  # data points
+#   n =  # features
+
+
+def get_data(data):
     """
-    get data from datafram, last column is the labels.
-    adds column of ones to X, as first column
-        :param data: dataframe
-        :return: X.shape (data_points, features), y.shape (data_points, 1)
+    get data from DataFrame, last column is the labels.
+    adds column of ones to x, as first column
+
+        :param data: each row contain the features, last column is the labels
+        :type data: DataFrame
+        :return: (x,y) x contain the data, shape (m,n+1).
+                y contains the labels, shape (m, 1)
+        :rtype: tuple
     """
-    X = np.append(np.ones([data.shape[0],1]),data.iloc[:, :-1], axis=1)
+    x = np.append(np.ones([data.shape[0], 1]), data.iloc[:, :-1], axis=1)
     y = np.expand_dims(data.iloc[:, -1].values, axis=1)
-    return X, y
+    return x, y
 
 
-def computeCost(X, y, theta) -> float:
+def compute_cost(x, y, theta):
     """
     computes MSE of linear model
 
-    m - #datapoint
-
-    n - #features
-
-    :param X: data, ndarray of fetures in the columns. shape==(m,n)
-    :param y: labels. shape==(m,1)
-    :param theta: weights. shape==(n,1)
-    :return: MSE, shape==scalar
+    :param x: data. data points in the rows, features in columns, shape (m,n+1)
+    :param y: labels, shape (m,1)
+    :param theta: weights, shape (n+1,1)
+    :type x: np.ndarray
+    :type y: np.ndarray
+    :type theta: np.ndarray
+    :return: MSE:  j = (((x.dot(theta) - y)**2).sum()) / (2 * len(y))
+    :rtype: float
     """
-    J = (((X.dot(theta)-y)**2).sum())/(2*len(y))
-    return J
+    j = (((x.dot(theta) - y)**2).sum()) / (2 * len(y))
+    return j
 
 
-def gradientDescent(X: np.ndarray, y: np.ndarray, init_theta: np.ndarray, alpha: float, iterations: int = 50):
+def gradient_descent(x, y, init_theta, alpha, iterations=50):
     """
     a batch GD implementation
 
-    m - #datapoint
-
-    n - #features
-
-    :param X: data, ndarray of fetures in the columns. shape==(m,n)
-    :param y: labels. shape==(m,1)
-    :param init_theta:
+    :param x: data. data points in the rows, features in columns, shape (m,n+1)
+    :param y: labels, shape (m,1)
+    :param init_theta: weights, shape (n+1,1)
     :param alpha: learning rate
     :param iterations: # of iterations
-    :return: tuple (theta, lossVec)
+
+    :type x: np.ndarray
+    :type y: np.ndarray
+    :type init_theta: np.ndarray
+    :type alpha: float
+    :type iterations: int
+
+    :returns: (theta, j_vec)
+            theta: learned weights, shape (n+1,1)
+            j_vec:  j values across the training, shape (iterations, )
+    :rtype: (np.ndarray, np.ndarray)
     """
     theta = init_theta
-    new_theta = init_theta  # value not used
-    J = np.zeros(iterations)
+    m = len(y)
+    j_vec = np.zeros(iterations)
     for itr in range(iterations):
-        J[itr] = computeCost(X, y, theta)
-#         print("%.2f" % J[itr])
-        for j in range(len(theta)):
-            new_theta[j] = theta[j] - (alpha/len(y))*(X.dot(theta)-y).T.dot(X[:,j])
-        theta = new_theta
-    return theta, J
+        j_vec[itr] = compute_cost(x, y, theta)
+        theta -= (alpha/m) * (x.dot(theta) - y).T.dot(x).T
+    return theta, j_vec
