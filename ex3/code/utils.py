@@ -1,5 +1,5 @@
 import numpy as np
-import pandas as pd
+from scipy.optimize import minimize
 
 # NOTE:
 #   m =  # data points
@@ -18,22 +18,6 @@ def sig(x):
     return 1/(1+np.exp(-x))
 
 
-def get_data(data):
-    """
-    get data from DataFrame, last column is the labels.
-    adds column of ones to x, as first column
-
-        :param data: each row contain the features, last column is the labels
-        :type data: pd.DataFrame
-        :return: (x,y) x contain the data, shape (m,n+1).
-                y contains the labels, shape (m, 1)
-        :rtype: tuple
-    """
-    x = np.append(np.ones([data.shape[0],1]),data.iloc[:, :-1], axis=1)
-    y = data.iloc[:, -1].values
-    return x, y
-
-
 def cost_function(theta, x, y, lamb=0.0):
     """computes binary logistic regression loss function
 
@@ -48,9 +32,8 @@ def cost_function(theta, x, y, lamb=0.0):
     :return: the total cost, scalar
     :rtype: float
     """
-
     h = sig(x.dot(theta))
-    cost = (-y * np.log(h) - (1 - y) * np.log(1 - h)).sum() / len(y)
+    cost = (-y * np.log(h) - (1-y) * np.log(1 - h)).sum() / len(y)
     reg = (theta[1:] ** 2).sum() * lamb / (2 * len(y))
     return cost + reg
 
@@ -72,31 +55,37 @@ def compute_grad(theta, x, y, lamb=0.0):
     h = sig(x.dot(theta))
     cost_grad = (h-y).dot(x)/len(y)
     reg_grad = (lamb/len(y))*theta
-    reg_grad[0] = 0  # bais weight is not regularized
+    reg_grad[0] = 0
     return cost_grad + reg_grad
 
 
-def map_feature(x, poly_deg=6):
+def one_vs_all(init_theta_mat, x, y, k, lamb=0.0):
     """
-    creates all polynomial features up to poly_deg.
+    trains k linear logistic regression classifiers in the one vs all method
 
-    :param x: data with ones in the first column and two more features, shape(m, 3)
-    :param poly_deg: the maximum polynomial degree, scalar
+    :param init_theta_mat: matrix containing the initial parameters for each classifier, shape (k, n+1)
+    :param x: data, shape (m,n+1)
+    :param y: labels containing numbers in range(k), shape (m, )
+    :param k: number of classes, scalar
+    :param lamb: regularization parameter lambda, scalar. default = 0.0.
+    :type init_theta_mat: np.ndarray
     :type x: np.ndarray
-    :type poly_deg: int
-    :return: a new data matrix with all the possible polynomial features up to poly_deg, shape(m, #possible_combination)
+    :type y: np.ndarray
+    :type k: int
+    :type lamb: float
+    :return: the learned parameters for each classifier, shape (k, n+1)
     :rtype: np.ndarray
     """
-    # compute the number of possible combinations.
-    new_dim = np.arange(1, poly_deg + 2).sum()
+    theta_mat = np.zeros_like(init_theta_mat)
+    for i in range(k):
+        tmp_y = (y == i) * 1
+        op_result = minimize(cost_function, init_theta_mat[i, :],
+                             args=(x, tmp_y, lamb), jac=compute_grad, method='L-BFGS-B')
 
-    new_x = np.zeros([x.shape[0], new_dim])
-    pos = 0
+        if not op_result.success:
+            print("something went wrong!!!")
+            print(op_result.message)
 
-    for i in range(poly_deg + 1):
-        for j in range(poly_deg - i + 1):
-            new_x[:, pos] = (x[:, 1] ** i) * (x[:, 2] ** j)
-            pos += 1
-    return new_x
-
+        theta_mat[i, :] = op_result.x
+    return theta_mat
 
