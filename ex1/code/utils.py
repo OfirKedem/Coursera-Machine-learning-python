@@ -68,3 +68,24 @@ def gradient_descent(x, y, init_theta, alpha, iterations=50):
         j_vec[itr] = compute_cost(x, y, theta)
         theta -= (alpha/m) * (x.dot(theta) - y).T.dot(x).T
     return theta, j_vec
+
+
+def normalize(x, mu, sigma):
+    """
+    normalize features by a specific mean and std, except first column of ones
+
+    :param x: data to normalize, shape(_,n+1)
+    :param mu: mean, shape(n, )
+    :param sigma: std, shape(n, )
+    :type x: np.ndarray
+    :type mu: np.ndarray
+    :type sigma: np.ndarray
+    :return: normalize data
+    :rtype: np.ndarray
+    """
+    if len(x.shape) == 1:  # in case of 1D array
+        x[1:] = (x[1:] - mu) / sigma
+    else:
+        x[:, 1:] = (x[:, 1:]-mu)/sigma
+    return x
+
