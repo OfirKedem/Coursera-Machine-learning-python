@@ -36,7 +36,7 @@ def compute_cost(x, y, theta):
     :return: MSE:  j = (((x.dot(theta) - y)**2).sum()) / (2 * len(y))
     :rtype: float
     """
-    j = (((x.dot(theta) - y)**2).sum()) / (2 * len(y))
+    j = (((x.dot(theta) - y) ** 2).sum()) / (2 * len(y))
     return j
 
 
@@ -66,7 +66,7 @@ def gradient_descent(x, y, init_theta, alpha, iterations=50):
     j_vec = np.zeros(iterations)
     for itr in range(iterations):
         j_vec[itr] = compute_cost(x, y, theta)
-        theta -= (alpha/m) * (x.dot(theta) - y).T.dot(x).T
+        theta -= (alpha / m) * (x.dot(theta) - y).T.dot(x).T
     return theta, j_vec
 
 
@@ -86,6 +86,5 @@ def normalize(x, mu, sigma):
     if len(x.shape) == 1:  # in case of 1D array
         x[1:] = (x[1:] - mu) / sigma
     else:
-        x[:, 1:] = (x[:, 1:]-mu)/sigma
+        x[:, 1:] = (x[:, 1:] - mu) / sigma
     return x
-

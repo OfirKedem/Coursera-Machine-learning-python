@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 
+
 # NOTE:
 #   m =  # data points
 #   n =  # features
@@ -12,10 +13,11 @@ def sig(x):
 
     :param x: scalar or array of any shape
     :type x: float, np.ndarray
-    :return: 1/(1+np.exp(-x))
+    :return: array of the same shape of x, containing the output of sigmoid function
+     for the corresponding entry in x. i.e. out[i,j] = sigmoid(x[i, j])
     :rtype: float, np.ndarray
     """
-    return 1/(1+np.exp(-x))
+    return 1 / (1 + np.exp(-x))
 
 
 def get_data(data):
@@ -29,7 +31,7 @@ def get_data(data):
                 y contains the labels, shape (m, 1)
         :rtype: tuple
     """
-    x = np.append(np.ones([data.shape[0],1]),data.iloc[:, :-1], axis=1)
+    x = np.append(np.ones([data.shape[0], 1]), data.iloc[:, :-1], axis=1)
     y = data.iloc[:, -1].values
     return x, y
 
@@ -70,8 +72,8 @@ def compute_grad(theta, x, y, lamb=0.0):
         :rtype: float
         """
     h = sig(x.dot(theta))
-    cost_grad = (h-y).dot(x)/len(y)
-    reg_grad = (lamb/len(y))*theta
+    cost_grad = (h - y).dot(x) / len(y)
+    reg_grad = (lamb / len(y)) * theta
     reg_grad[0] = 0  # bais weight is not regularized
     return cost_grad + reg_grad
 
@@ -98,5 +100,3 @@ def map_feature(x, poly_deg=6):
             new_x[:, pos] = (x[:, 1] ** i) * (x[:, 2] ** j)
             pos += 1
     return new_x
-
-
